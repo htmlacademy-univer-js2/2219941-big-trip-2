@@ -1,5 +1,5 @@
 import FilterView from './view/filter-view.js';
-import TripPresenter from './presenter.js';
+import TripPresenter from './presenter/presenter.js';
 import {render} from './render.js';
 
 const siteMainElement = document.querySelector('.page-main');
