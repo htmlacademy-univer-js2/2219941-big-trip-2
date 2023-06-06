@@ -6,18 +6,26 @@ import AddNewPointView from '../view/add-new-point-view.js';
 import {render} from '../render.js';
 
 export default class TripPresenter {
-  constructor({contentContainer}) {
+  constructor({contentContainer, pointsModel}) {
     this.contentContainer = contentContainer;
     this.pointListComponent = new PointListView();
+    this.pointsModel = pointsModel;
   }
 
   init () {
+    this.points = this.pointsModel.getPoints();
+    this.destinations = this.pointsModel.getDestinations();
+    this.offers = this.pointsModel.getOffers();
+
     render(new SortView(), this.contentContainer);
     render(this.pointListComponent, this.contentContainer);
-    render(new EditPointView, this.pointListComponent.getElement());
+    render(new EditPointView(this.points[0], this.destinations, this.offers),
+      this.pointListComponent.getElement());
     render(new AddNewPointView(), this.pointListComponent.getElement());
-    for (let i = 0; i < 3; i++) {
-      render(new PointView(), this.pointListComponent.getElement());
+
+    for (const point of this.points) {
+      render(new PointView(point, this.destinations, this.offers),
+        this.pointListComponent.getElement());
     }
   }
 }
