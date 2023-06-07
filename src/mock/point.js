@@ -1,6 +1,6 @@
 import {getRandomArrayElement, getRandomInteger} from '../utils.js';
 
-const POINTS_AMOUNT = 15;
+const POINTS_AMOUNT = 10;
 const PICTURES_GENERATION = 11;
 
 const POINT_TYPES = [
