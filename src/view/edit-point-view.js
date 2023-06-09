@@ -167,7 +167,8 @@ export default class EditPointView extends AbstractView {
   #offers = null;
 
   constructor(point, destination, offers) {
-    super();this.#point = point;
+    super();
+    this.#point = point;
     this.#destination = destination;
     this.#offers = offers;
   }
