@@ -1,5 +1,5 @@
-import {fixDateFormat, getDate, getTime, getDuration} from '../utils.js';
-import {createElement} from '../render.js';
+import {fixDateFormat, getDate, getTime, getDuration} from '../utils/task.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const createOffers = (offers, checkedOffers) => {
   let result = '';
@@ -64,15 +64,15 @@ const createPointTemplate = (point, destinations, offersList) => {
             </li>`);
 };
 
-export default class PointView {
-  #element = null;
+export default class PointView extends AbstractView {
   #point = null;
   #destination = null;
   #offers = null;
 
   constructor(point, destination, offers) {
+    super();
     this.#point = point;
-    this.#destination =destination;
+    this.#destination = destination;
     this.#offers = offers;
   }
 
@@ -80,15 +80,14 @@ export default class PointView {
     return createPointTemplate(this.#point, this.#destination, this.#offers);
   }
 
-  get element() {
-    if (!this.#element) {
-      this.#element = createElement(this.template);
-    }
+  handleRollupButtonClick = (callback) => {
+    this._callback.rollupButtonClick = callback;
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#rollupButtonClickHandler);
+  };
 
-    return this.#element;
-  }
-
-  removeElement() {
-    this.#element = null;
-  }
+  #rollupButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.rollupButtonClick();
+  };
 }

@@ -1,5 +1,5 @@
-import {createElement} from '../render.js';
-import {getDateTime} from '../utils.js';
+import AbstractView from '../framework/view/abstract-view.js';
+import {getDateTime} from '../utils/task.js';
 
 const createOffers = (offers, checkedOffers) => {
   let result = '';
@@ -161,14 +161,13 @@ const createEditPointTemplate = (point, destinations, offersList) => {
             </li>`);
 };
 
-export default class EditPointView {
-  #element = null;
+export default class EditPointView extends AbstractView {
   #point = null;
   #destination = null;
   #offers = null;
 
   constructor(point, destination, offers) {
-    this.#point = point;
+    super();this.#point = point;
     this.#destination = destination;
     this.#offers = offers;
   }
@@ -177,15 +176,25 @@ export default class EditPointView {
     return createEditPointTemplate(this.#point, this.#destination, this.#offers);
   }
 
-  get element() {
-    if (!this.#element) {
-      this.#element = createElement(this.template);
-    }
+  handleRollupButtonClick = (callback) => {
+    this._callback.rollupButtonClick = callback;
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#rollupButtonClickHandler);
+  };
 
-    return this.#element;
-  }
+  handleSubmitForm = (callback) => {
+    this._callback.submitClick = callback;
+    this.element.querySelector('form')
+      .addEventListener('submit',this.#submitClickHandler);
+  };
 
-  removeElement() {
-    this.#element = null;
-  }
+  #rollupButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.rollupButtonClick();
+  };
+
+  #submitClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.submitClick();
+  };
 }

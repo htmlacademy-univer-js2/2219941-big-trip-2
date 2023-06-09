@@ -1,4 +1,4 @@
-import {getRandomArrayElement, getRandomInteger} from '../utils.js';
+import {getRandomArrayElement, getRandomInteger} from '../utils/common.js';
 
 const POINTS_AMOUNT = 10;
 const PICTURES_GENERATION = 11;
