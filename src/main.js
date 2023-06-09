@@ -2,7 +2,7 @@ import FilterView from './view/filter-view.js';
 import MenuView from './view/menu-view.js';
 import TripPresenter from './presenter/presenter.js';
 import PointsModel from './model/points_model.js';
-import {render} from './render.js';
+import {render} from './framework/render.js';
 
 const siteMainElement = document.querySelector('.page-main');
 const siteHeaderElement = document.querySelector('.page-header');
