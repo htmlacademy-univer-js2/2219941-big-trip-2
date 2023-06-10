@@ -26,4 +26,11 @@ const isFuture = (point) => dayjs().diff(point.dateFrom, 'hour') <= 0;
 const isPast = (point) => dayjs().diff(point.dateTo, 'hour') > 0;
 const isCurrent = (point) => isPast(point.dateFrom) && isFuture(point.dateTo);
 
-export {fixDateFormat, getTime, getDate, getDateTime, getDuration, isFuture, isPast, isCurrent};
+const getSimpledDuration = (point) => dayjs(point.dateTo).diff(dayjs(point.dateFrom));
+
+const getDateDifference = (pointFirst, pointSecond) => (
+  dayjs(pointFirst.dateFrom).diff(dayjs(pointSecond.dateFrom))
+);
+
+export {fixDateFormat, getTime, getDate, getDateTime, getDuration,
+  isFuture, isPast, isCurrent, getSimpledDuration, getDateDifference};
