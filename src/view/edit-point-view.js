@@ -185,7 +185,7 @@ export default class EditPointView extends AbstractView {
 
   handleSubmitForm = (callback) => {
     this._callback.submitClick = callback;
-    this.element.querySelector('form')
+    this.element.querySelector('.event__save-btn')
       .addEventListener('submit',this.#submitClickHandler);
   };
 
