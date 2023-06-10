@@ -1,4 +1,5 @@
 import {getRandomArrayElement, getRandomInteger} from '../utils/common.js';
+import {nanoid} from 'nanoid';
 
 const POINTS_AMOUNT = 10;
 const PICTURES_GENERATION = 11;
@@ -72,7 +73,7 @@ const generateOffers = () => Array.from({length: POINT_TYPES.length})
 const offers = generateOffers();
 const destinations = generateDestinations();
 
-const generatePoint = (id) => {
+const generatePoint = () => {
   const offersPoint = getRandomArrayElement(offers);
   const offersIds = offersPoint.offers.map((offer) => offer.id);
   return {
@@ -80,7 +81,7 @@ const generatePoint = (id) => {
     dateFrom: '2019-07-10T22:55:56.845Z',
     dateTo: '2019-07-11T11:22:13.375Z',
     destination: getRandomArrayElement(destinations).id,
-    id,
+    id: nanoid(),
     isFavourite: Boolean(getRandomInteger()),
     offers: Array.from({length: getRandomInteger(0, offersIds.length)})
       .map(() => offersIds[getRandomInteger(0, offersIds.length - 1)]),
@@ -88,7 +89,7 @@ const generatePoint = (id) => {
   };
 };
 
-const generatePoints = () => Array.from({length:POINTS_AMOUNT})
-  .map((value, index) => generatePoint(index + 1));
+const generatePoints = () => Array.from({length: POINTS_AMOUNT})
+  .map(() => generatePoint());
 
 export {generatePoints, generateDestinations, generateOffers};
