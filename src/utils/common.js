@@ -9,4 +9,6 @@ const getRandomArrayElement = (items) => items[getRandomInteger(0, items.length 
 
 const updateItem = (items, update) => items.map((item) => item.id === update.id ? update : item);
 
-export {getRandomInteger, getRandomArrayElement, updateItem};
+const capitalizeFirstLetter = (line) => line.charAt(0).toUpperCase() + line.slice(1);
+
+export {getRandomInteger, getRandomArrayElement, updateItem, capitalizeFirstLetter};

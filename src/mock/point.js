@@ -82,7 +82,7 @@ const generatePoint = () => {
     dateTo: '2019-07-11T11:22:13.375Z',
     destination: getRandomArrayElement(destinations).id,
     id: nanoid(),
-    isFavourite: Boolean(getRandomInteger()),
+    isFavorite: Boolean(getRandomInteger()),
     offers: Array.from({length: getRandomInteger(0, offersIds.length)})
       .map(() => offersIds[getRandomInteger(0, offersIds.length - 1)]),
     type: offersPoint.type
@@ -92,4 +92,4 @@ const generatePoint = () => {
 const generatePoints = () => Array.from({length: POINTS_AMOUNT})
   .map(() => generatePoint());
 
-export {generatePoints, generateDestinations, generateOffers};
+export {generatePoints, generateDestinations, generateOffers, POINT_TYPES};
