@@ -205,7 +205,7 @@ export default class EditPointView extends AbstractStatefulView {
       .addEventListener('submit',this.#submitClickHandler);
   };
 
-  handleDateFromChange = (callback) => {
+  handleDateFromChange = () => {
     if (this._state.dateFrom) {
       this.#datepicker = flatpickr(
         this.element.querySelector('#event-start-time-1'),
@@ -220,7 +220,7 @@ export default class EditPointView extends AbstractStatefulView {
     }
   };
 
-  handleDateToChange = (callback) => {
+  handleDateToChange = () => {
     if (this._state.dateFrom) {
       this.#datepicker = flatpickr(
         this.element.querySelector('#event-start-time-1'),
