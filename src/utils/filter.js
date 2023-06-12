@@ -12,4 +12,4 @@ const filter = {
   [FilterType.PAST]: (points) => points.filter((point) => isPast(point) || isCurrent(point))
 };
 
-export {filter};
+export {filter, FilterType};

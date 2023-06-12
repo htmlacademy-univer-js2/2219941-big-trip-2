@@ -1,7 +1,7 @@
 import {getRandomArrayElement, getRandomInteger} from '../utils/common.js';
 import {nanoid} from 'nanoid';
 
-const POINTS_AMOUNT = 10;
+const POINTS_AMOUNT = 7;
 const PICTURES_GENERATION = 11;
 
 const POINT_TYPES = [
@@ -15,6 +15,7 @@ const POINT_TYPES = [
   'Sightseeing',
   'Restaurant'
 ];
+
 const DESTINATIONS = [
   'Saint-Petersburg',
   'Bangkok',
@@ -70,17 +71,17 @@ const generateOffersByType = (offerType) => ({
 const generateOffers = () => Array.from({length: POINT_TYPES.length})
   .map((value, index) => generateOffersByType(POINT_TYPES[index]));
 
-const offers = generateOffers();
-const destinations = generateDestinations();
+const generatedOffers = generateOffers();
+const generatedDestinations = generateDestinations();
 
 const generatePoint = () => {
-  const offersPoint = getRandomArrayElement(offers);
+  const offersPoint = getRandomArrayElement(generatedOffers);
   const offersIds = offersPoint.offers.map((offer) => offer.id);
   return {
     basePrice: getRandomInteger(Price.MIN, Price.MAX),
     dateFrom: '2019-07-10T22:55:56.845Z',
     dateTo: '2019-07-11T11:22:13.375Z',
-    destination: getRandomArrayElement(destinations).id,
+    destination: getRandomArrayElement(generatedDestinations).id,
     id: nanoid(),
     isFavorite: Boolean(getRandomInteger()),
     offers: Array.from({length: getRandomInteger(0, offersIds.length)})
@@ -92,4 +93,4 @@ const generatePoint = () => {
 const generatePoints = () => Array.from({length: POINTS_AMOUNT})
   .map(() => generatePoint());
 
-export {generatePoints, generateDestinations, generateOffers, POINT_TYPES};
+export {generatePoints, generateDestinations, generateOffers, POINT_TYPES, generatedDestinations, generatedOffers};

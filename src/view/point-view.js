@@ -1,5 +1,6 @@
 import {fixDateFormat, getDate, getTime, getDuration} from '../utils/task.js';
 import AbstractView from '../framework/view/abstract-view.js';
+import he from 'he';
 
 const createOffers = (offers, checkedOffers) => {
   let result = '';
@@ -31,7 +32,7 @@ const createPointTemplate = (point, destinations, offersList) => {
                 <div class="event__type">
                   <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="${type} icon">
                 </div>
-                <h3 class="event__title">${type} ${destinations[destination].name}</h3>
+                <h3 class="event__title">${type} ${he.encode(destinations[destination].name)}</h3>
                 <div class="event__schedule">
                   <p class="event__time">
                     <time class="event__start-time" datetime="${dateFrom}">
