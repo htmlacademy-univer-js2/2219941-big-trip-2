@@ -1,6 +1,12 @@
-import AbstractView from '../framework/view/abstract-view.js';
-import {POINT_TYPES} from '../mock/point';
+import AbstractStatefulView from '../framework/view/abstract-view.js';
+import {POINT_TYPES} from '../mock/point.js';
 import {getDateTime} from '../utils/task.js';
+import {capitalizeFirstLetter} from '../utils/common.js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+import he from 'he';
+import {EMPTY_POINT} from '../model/points_model.js';
+import dayjs from 'dayjs';
 
 const createEventTypeItems = (chosenType) => {
   let result = '';
@@ -23,15 +29,15 @@ const createDestinationOptions = (destinations) => {
   return result;
 };
 
-const createOffers = (offers) => {
+const createOffers = (offers, checkedOffers) => {
   let result = '';
   offers.forEach((offer) => {
-    const {title, price} = offer;
-    result += `<div class="event__available-offers">
-      <div class="event__offer-selector">
-        <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.id}"
-        type="checkbox" name="event-offer-luggage">
-        <label class="event__offer-label" for="event-offer-${offer.id}">
+    const {title, price, id} = offer;
+    const isChecked = checkedOffers.includes(id) ? 'checked' : '';
+    result += `<div class="event__offer-selector">
+        <input class="event__offer-checkbox  visually-hidden" id="event-offer-${id}"
+        type="checkbox" name="event-offer-luggage" ${isChecked}>
+        <label class="event__offer-label" for="event-offer-${id}">
             <span class="event__offer-title">${title}</span>
                 &plus;&euro;&nbsp;
             <span class="event__offer-price">${price}</span>
@@ -41,8 +47,9 @@ const createOffers = (offers) => {
   return result;
 };
 
-const createAddNewPointTemplate = (point, destinations) => {
+const createAddNewPointTemplate = (point, destinations, offersList) => {
   const {basePrice, dateFrom, dateTo, destination, offers, type} = point;
+  const allTypeOffers = offersList.find((offer) => offer.type === type);
 
   return `<li class="trip-events__item">
               <form class="event event--edit" action="#" method="post">
@@ -66,13 +73,13 @@ const createAddNewPointTemplate = (point, destinations) => {
                   </div>
 
                   <div class="event__field-group  event__field-group--destination">
-                    <label class="event__label  event__type-output" for="event-destination-1">
+                    <label class="event__label  event__type-output" for="event-destination-${destination}">
                       ${type}
                     </label>
-                    <input class="event__input  event__input--destination" id="event-destination-1" type="text"
-                    name="event-destination" value="${destinations[destination].name}" list="destination-list-1">
+                    <input class="event__input  event__input--destination" id="event-destination-${destination}" type="text"
+                    name="event-destination" value="${he.encode(destinations[destination].name)}" list="destination-list-1">
                     <datalist id="destination-list-1">
-                      ${createDestinationOptions()}
+                      ${createDestinationOptions(destinations)}
                     </datalist>
                   </div>
 
@@ -91,7 +98,7 @@ const createAddNewPointTemplate = (point, destinations) => {
                       <span class="visually-hidden">Price</span>
                       &euro;
                     </label>
-                    <input class="event__input  event__input--price" id="event-price-1" type="text"
+                    <input class="event__input  event__input--price" id="event-price-1" type="number"
                     name="event-price" value="${basePrice}">
                   </div>
 
@@ -103,7 +110,7 @@ const createAddNewPointTemplate = (point, destinations) => {
                     <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
                     <div class="event__available-offers">
-                      ${createOffers(offers)}
+                      ${createOffers(allTypeOffers.offers, offers)}
                     </div>
                   </section>
 
@@ -126,17 +133,186 @@ const createAddNewPointTemplate = (point, destinations) => {
             </li>`;
 };
 
-export default class AddNewPointView extends AbstractView {
-  #point = null;
-  #destinations = null;
+export default class AddNewPointView extends AbstractStatefulView {
+  #destination = null;
+  #offers = null;
+  #datepicker = null;
 
-  constructor(point, destinations) {
+  constructor(point = EMPTY_POINT, destination, offers) {
     super();
-    this.#point = point;
-    this.#destinations = destinations;
+    this._state = AddNewPointView.parsePointToState(point);
+    this.#destination = destination;
+    this.#offers = offers;
+
+    this._restoreHandlers();
   }
 
   get template() {
-    return createAddNewPointTemplate(this.#point, this.#destinations);
+    return createAddNewPointTemplate(this._state, this.#destination, this.#offers);
   }
+
+  removeElement() {
+    super.removeElement();
+
+    if (this.#datepicker) {
+      this.#datepicker.destroy();
+      this.#datepicker = null;
+    }
+  }
+
+  _restoreHandlers() {
+    this.handleSubmitForm();
+    this.handleDestinationChange();
+    this.handleTypeChange();
+    this.handleOffersChange();
+    this.handleDateFromChange();
+    this.handleDateToChange();
+    this.handleCancelButtonClick();
+    this.handlePriceChange();
+  }
+
+  reset = (point) => {
+    this.updateElement(AddNewPointView.parsePointToState(point));
+  };
+
+  handleTypeChange = (callback) => {
+    this._callback.typeChange = callback;
+    this.element.querySelector('.event__type-list')
+      .addEventListener('change', this.#pointTypeChangeHandler);
+  };
+
+  handleDestinationChange = (callback) => {
+    this._callback.destinationChange = callback;
+    this.element.querySelector('.event__input--destination')
+      .addEventListener('change', this.#destinationChangeHandler);
+  };
+
+  handleOffersChange = (callback) => {
+    this._callback.offersChange = callback;
+    this.element.querySelector('.event__available-offers')
+      .addEventListener('change', this.#offersChangeHandler);
+  };
+
+  handleRollUpButtonClick = (callback) => {
+    this._callback.rollupButtonClick = callback;
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#rollupButtonClickHandler);
+  };
+
+  handleSubmitForm = (callback) => {
+    this._callback.submitClick = callback;
+    this.element.querySelector('.event__save-btn')
+      .addEventListener('click',this.#submitClickHandler);
+  };
+
+  handleDateFromChange = () => {
+    if (this._state.dateFrom) {
+      this.#datepicker = flatpickr(
+        this.element.querySelector('#event-start-time-1'),
+        {
+          dateFormat: 'd/m/y H:i',
+          enableTime: true,
+          defaultDate: this._state.dateFrom,
+          maxDate: this._state.dateTo,
+          onChange: this.#dateFromChangeHandler
+        }
+      );
+    }
+  };
+
+  handleDateToChange = () => {
+    if (this._state.dateFrom) {
+      this.#datepicker = flatpickr(
+        this.element.querySelector('#event-end-time-1'),
+        {
+          dateFormat: 'd/m/y H:i',
+          enableTime: true,
+          defaultDate: this._state.dateTo,
+          minDate: this._state.dateFrom,
+          onChange: this.#dateToChangeHandler
+        }
+      );
+    }
+  };
+
+  handleCancelButtonClick = (callback) => {
+    this._callback.cancelClick = callback;
+    this.element.querySelector('.event__reset-btn')
+      .addEventListener('click', this.#formCancelClickHandler);
+  };
+
+  handlePriceChange = (callback) => {
+    this._callback.priceChange = callback;
+    this.element.querySelector('.event__input--price')
+      .addEventListener('input', this.#priceChangeHandler);
+  };
+
+  #formCancelClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.cancelClick(AddNewPointView.parseStateToPoint(this._state));
+  };
+
+  #dateFromChangeHandler = ([userDate]) => {
+    this.updateElement({
+      dateFrom: dayjs(userDate).toDate()
+    });
+  };
+
+  #dateToChangeHandler = ([userDate]) => {
+    this.updateElement({
+      dateTo: dayjs(userDate).toDate()
+    });
+  };
+
+  #pointTypeChangeHandler = (evt) => {
+    evt.preventDefault();
+    this.updateElement({
+      type: capitalizeFirstLetter(evt.target.value),
+      offers: []
+    });
+  };
+
+  #destinationChangeHandler = (evt) => {
+    evt.preventDefault();
+    this.updateElement({
+      destination: this.#destination.find((dest) => evt.target.value === dest.name)?.id
+    });
+  };
+
+  #priceChangeHandler = (evt) => {
+    evt.preventDefault();
+    this._setState({
+      basePrice: evt.target.value
+    });
+  };
+
+  #offersChangeHandler = (evt) => {
+    evt.preventDefault();
+    if (this._state.offers.includes(evt.target.id.slice(-1))) {
+      this._state.offers = this._state.offers.filter((id) => (
+        id !== evt.target.id.slice(-1)));
+    } else {
+      this._state.offers.push(evt.target.id.slice(-1));
+    }
+    this._setState({
+      offers: this._state.offers
+    });
+  };
+
+  #rollupButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.rollupButtonClick();
+  };
+
+  #submitClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.submitClick(AddNewPointView.parseStateToPoint(this._state));
+  };
+
+  static parsePointToState = (point) => ({...point,
+    dateTo: dayjs(point.dateTo).toDate(),
+    dateFrom: dayjs(point.dateFrom).toDate()
+  });
+
+  static parseStateToPoint = (state) => ({...state});
 }
