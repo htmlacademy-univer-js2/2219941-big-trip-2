@@ -1,11 +1,10 @@
 import AbstractStatefulView from '../framework/view/abstract-view.js';
-import {POINT_TYPES} from '../mock/point.js';
+import {POINT_TYPES} from '../const.js';
 import {getDateTime} from '../utils/task.js';
 import {capitalizeFirstLetter} from '../utils/common.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import he from 'he';
-import {EMPTY_POINT} from '../model/points_model.js';
 import dayjs from 'dayjs';
 
 const createEventTypeItems = (chosenType) => {
@@ -50,6 +49,7 @@ const createOffers = (offers, checkedOffers) => {
 const createAddNewPointTemplate = (point, destinations, offersList) => {
   const {basePrice, dateFrom, dateTo, destination, offers, type} = point;
   const allTypeOffers = offersList.find((offer) => offer.type === type);
+  const destinationInfo = destinations.find((item) => item.id === destination);
 
   return `<li class="trip-events__item">
               <form class="event event--edit" action="#" method="post">
@@ -77,7 +77,7 @@ const createAddNewPointTemplate = (point, destinations, offersList) => {
                       ${type}
                     </label>
                     <input class="event__input  event__input--destination" id="event-destination-${destination}" type="text"
-                    name="event-destination" value="${he.encode(destinations[destination].name)}" list="destination-list-1">
+                    name="event-destination" value="${destinationInfo ? he.encode(destinationInfo.name) : ''}" list="destination-list-1">
                     <datalist id="destination-list-1">
                       ${createDestinationOptions(destinations)}
                     </datalist>
@@ -138,7 +138,7 @@ export default class AddNewPointView extends AbstractStatefulView {
   #offers = null;
   #datepicker = null;
 
-  constructor(point = EMPTY_POINT, destination, offers) {
+  constructor({point, destination, offers}) {
     super();
     this._state = AddNewPointView.parsePointToState(point);
     this.#destination = destination;
@@ -161,51 +161,37 @@ export default class AddNewPointView extends AbstractStatefulView {
   }
 
   _restoreHandlers() {
-    this.handleSubmitForm();
-    this.handleDestinationChange();
-    this.handleTypeChange();
-    this.handleOffersChange();
-    this.handleDateFromChange();
-    this.handleDateToChange();
-    this.handleCancelButtonClick();
-    this.handlePriceChange();
+    this.element.querySelector('.event__type-list')
+      .addEventListener('change', this.#pointTypeChangeHandler);
+    this.element.querySelector('.event__input--destination')
+      .addEventListener('change', this.#destinationChangeHandler);
+    this.element.querySelector('.event__save-btn')
+      .addEventListener('click',this.#submitClickHandler);
+    this.element.querySelector('.event__reset-btn')
+      .addEventListener('click', this.#formCancelClickHandler);
+    this.element.querySelector('.event__input--price')
+      .addEventListener('input', this.#priceChangeHandler);
+    if (this.element.querySelector('.event__available-offers')) {
+      this.element.querySelector('.event__available-offers')
+        .addEventListener('change', this.#offersChangeHandler);
+    }
+    this.#handleDateFromChange();
+    this.#handleDateToChange();
   }
 
   reset = (point) => {
     this.updateElement(AddNewPointView.parsePointToState(point));
   };
 
-  handleTypeChange = (callback) => {
-    this._callback.typeChange = callback;
-    this.element.querySelector('.event__type-list')
-      .addEventListener('change', this.#pointTypeChangeHandler);
+  setSubmitCallback = (callback) => {
+    this._callback.submitNewPointClick = callback;
   };
 
-  handleDestinationChange = (callback) => {
-    this._callback.destinationChange = callback;
-    this.element.querySelector('.event__input--destination')
-      .addEventListener('change', this.#destinationChangeHandler);
+  setCancelCallback = (callback) => {
+    this._callback.cancelNewPointClick = callback;
   };
 
-  handleOffersChange = (callback) => {
-    this._callback.offersChange = callback;
-    this.element.querySelector('.event__available-offers')
-      .addEventListener('change', this.#offersChangeHandler);
-  };
-
-  handleRollUpButtonClick = (callback) => {
-    this._callback.rollupButtonClick = callback;
-    this.element.querySelector('.event__rollup-btn')
-      .addEventListener('click', this.#rollupButtonClickHandler);
-  };
-
-  handleSubmitForm = (callback) => {
-    this._callback.submitClick = callback;
-    this.element.querySelector('.event__save-btn')
-      .addEventListener('click',this.#submitClickHandler);
-  };
-
-  handleDateFromChange = () => {
+  #handleDateFromChange = () => {
     if (this._state.dateFrom) {
       this.#datepicker = flatpickr(
         this.element.querySelector('#event-start-time-1'),
@@ -220,7 +206,7 @@ export default class AddNewPointView extends AbstractStatefulView {
     }
   };
 
-  handleDateToChange = () => {
+  #handleDateToChange = () => {
     if (this._state.dateFrom) {
       this.#datepicker = flatpickr(
         this.element.querySelector('#event-end-time-1'),
@@ -235,21 +221,9 @@ export default class AddNewPointView extends AbstractStatefulView {
     }
   };
 
-  handleCancelButtonClick = (callback) => {
-    this._callback.cancelClick = callback;
-    this.element.querySelector('.event__reset-btn')
-      .addEventListener('click', this.#formCancelClickHandler);
-  };
-
-  handlePriceChange = (callback) => {
-    this._callback.priceChange = callback;
-    this.element.querySelector('.event__input--price')
-      .addEventListener('input', this.#priceChangeHandler);
-  };
-
   #formCancelClickHandler = (evt) => {
     evt.preventDefault();
-    this._callback.cancelClick(AddNewPointView.parseStateToPoint(this._state));
+    this._callback.cancelNewPointClick(AddNewPointView.parseStateToPoint(this._state));
   };
 
   #dateFromChangeHandler = ([userDate]) => {
@@ -267,8 +241,9 @@ export default class AddNewPointView extends AbstractStatefulView {
   #pointTypeChangeHandler = (evt) => {
     evt.preventDefault();
     this.updateElement({
-      type: capitalizeFirstLetter(evt.target.value),
-      offers: []
+      ...this._state,
+      type: evt.target.value,
+      offers: this.#offers.find((offer) => offer.type === evt.target.value).offers
     });
   };
 
@@ -299,14 +274,9 @@ export default class AddNewPointView extends AbstractStatefulView {
     });
   };
 
-  #rollupButtonClickHandler = (evt) => {
-    evt.preventDefault();
-    this._callback.rollupButtonClick();
-  };
-
   #submitClickHandler = (evt) => {
     evt.preventDefault();
-    this._callback.submitClick(AddNewPointView.parseStateToPoint(this._state));
+    this._callback.submitNewPointClick(AddNewPointView.parseStateToPoint(this._state));
   };
 
   static parsePointToState = (point) => ({...point,

@@ -1,6 +1,7 @@
 import SortView, {SortType} from '../view/sort-view.js';
 import PointListView from '../view/point-list-view.js';
 import NoPointView from '../view/no-point-view.js';
+import LoadingView from '../view/loading-view.js';
 import PointPresenter, {UpdateType, UserAction} from './point-presenter.js';
 import NewPointPresenter from './new-point-presenter.js';
 import {remove, render, RenderPosition} from '../framework/render.js';
@@ -10,29 +11,40 @@ import {filter, FilterType} from '../utils/filter.js';
 export default class PagePresenter {
   #contentContainer = null;
   #pointsModel = null;
+  #destinationsModel = null;
+  #offersModel = null;
   #filterModel = null;
 
   #pointsListComponent = new PointListView();
+  #loadingComponent = new LoadingView();
   #noPointComponent = null;
   #sortComponent = null;
 
   #pointPresenter = new Map();
-  #currentSortType = SortType.DAY;
-  #filterType = FilterType.EVERYTHING;
   #newPointPresenter = null;
 
-  constructor({contentContainer, pointsModel, filterModel}) {
+  #currentSortType = SortType.DAY;
+  #filterType = FilterType.EVERYTHING;
+  #isLoading = true;
+
+  constructor({contentContainer, pointsModel, filterModel, destinationsModel, offersModel}) {
     this.#contentContainer = contentContainer;
     this.#pointsModel = pointsModel;
     this.#filterModel = filterModel;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
 
     this.#newPointPresenter = new NewPointPresenter({
       pointListContainer: this.#pointsListComponent.element,
       onDataChange: this.#handleViewAction,
-      pointsModel: this.#pointsModel
+      pointsModel: this.#pointsModel,
+      destinationsModel: this.#destinationsModel,
+      offersModel: this.#offersModel
     });
 
     this.#pointsModel.addObserver(this.#handleModelEvent);
+    this.#destinationsModel.addObserver(this.#handleModelEvent);
+    this.#offersModel.addObserver(this.#handleModelEvent);
     this.#filterModel.addObserver(this.#handleModelEvent);
   }
 
@@ -41,7 +53,7 @@ export default class PagePresenter {
   }
 
   get points() {
-    this.#filterType = this.#filterModel.filter;
+    this.#filterType = this.#filterModel.filter.split('\n')[0];
     const points = this.#pointsModel.points;
     const filteredPoints = filter[this.#filterType](points);
 
@@ -97,6 +109,12 @@ export default class PagePresenter {
         });
         this.#renderPage();
         break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
+        remove(this.#noPointComponent);
+        this.#renderPage();
+        break;
     }
   };
 
@@ -123,7 +141,9 @@ export default class PagePresenter {
       pointsListContainer: this.#pointsListComponent.element,
       pointsModel: this.#pointsModel,
       onDataChange: this.#handleViewAction,
-      onModeChange: this.#handleModeChange
+      onModeChange: this.#handleModeChange,
+      destinationsModel: this.#destinationsModel,
+      offersModel: this.#offersModel
     });
     pointPresenter.init(point);
     this.#pointPresenter.set(point.id, pointPresenter);
@@ -131,6 +151,10 @@ export default class PagePresenter {
 
   #renderPoints = (points) => {
     points.forEach((point) => this.#renderPoint(point));
+  };
+
+  #renderLoading = () => {
+    render(this.#loadingComponent, this.#contentContainer);
   };
 
   #renderNoPoints = () => {
@@ -146,6 +170,7 @@ export default class PagePresenter {
     this.#pointPresenter.clear();
 
     remove(this.#sortComponent);
+    remove(this.#loadingComponent);
     if (this.#noPointComponent) {
       remove(this.#noPointComponent);
     }
@@ -156,6 +181,10 @@ export default class PagePresenter {
   };
 
   #renderPage = () => {
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
     if (this.points.length === 0) {
       this.#renderNoPoints();
       return;

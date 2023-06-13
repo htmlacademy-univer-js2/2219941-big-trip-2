@@ -16,7 +16,8 @@ const UserAction = {
 const UpdateType = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
-  MAJOR: 'MAJOR'
+  MAJOR: 'MAJOR',
+  INIT: 'INIT'
 };
 
 export default class PointPresenter {
@@ -24,6 +25,8 @@ export default class PointPresenter {
   #pointComponent = null;
   #editPointComponent = null;
   #pointsModel = null;
+  #destinationsModel = null;
+  #offersModel = null;
 
   #handleDataChange = null;
   #handleModeChange = null;
@@ -33,17 +36,19 @@ export default class PointPresenter {
   #offers = null;
   #mode = Mode.DEFAULT;
 
-  constructor({pointsListContainer, pointsModel, onDataChange, onModeChange}) {
+  constructor({pointsListContainer, pointsModel, onDataChange, onModeChange, destinationsModel, offersModel}) {
     this.#pointsListContainer = pointsListContainer;
     this.#pointsModel = pointsModel;
     this.#handleDataChange = onDataChange;
     this.#handleModeChange = onModeChange;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
   }
 
   init(point) {
     this.#point = point;
-    this.#destinations = [...this.#pointsModel.destinations];
-    this.#offers = [...this.#pointsModel.offers];
+    this.#destinations = [...this.#destinationsModel.destinations];
+    this.#offers = [...this.#offersModel.offers];
 
     const prevPointComponent = this.#pointComponent;
     const prevEditPointComponent = this.#editPointComponent;
@@ -53,9 +58,9 @@ export default class PointPresenter {
     this.#pointComponent.handleFavoriteButtonClick(this.#handleFavoriteButtonClick);
 
     this.#editPointComponent = new EditPointView(point, this.#destinations, this.#offers);
-    this.#editPointComponent.handleSubmitForm(this.#handleSubmitForm);
-    this.#editPointComponent.handleRollUpButtonClick(this.#handleRollUpButtonClick);
-    this.#editPointComponent.handleDeleteButtonClick(this.#handleDeleteButtonClick);
+    this.#editPointComponent.setSubmitCallback(this.#handleSubmitForm);
+    this.#editPointComponent.setRollUpButtonCallback(this.#handleRollUpButtonClick);
+    this.#editPointComponent.setDeleteCallback(this.#handleDeleteButtonClick);
 
     if (prevPointComponent === null || prevEditPointComponent === null) {
       render(this.#pointComponent, this.#pointsListContainer);
