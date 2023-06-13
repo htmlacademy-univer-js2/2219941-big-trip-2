@@ -2,22 +2,29 @@ import {remove, render, RenderPosition} from '../framework/render.js';
 import AddNewPointView from '../view/add-new-point-view.js';
 import {nanoid} from 'nanoid';
 import {UserAction, UpdateType} from './point-presenter.js';
+import {EMPTY_POINT} from '../model/points_model.js';
 
 export default class NewPointPresenter {
   #pointListContainer = null;
+
   #handleDataChange = null;
   #handleDestroy = null;
+
   #pointsModel = null;
+  #destinationsModel = null;
+  #offersModel = null;
+
   #destinations = null;
   #offers = null;
 
   #newPointComponent = null;
 
-
-  constructor({pointListContainer, onDataChange, pointsModel}) {
+  constructor({pointListContainer, onDataChange, pointsModel, destinationsModel, offersModel}) {
     this.#pointListContainer = pointListContainer;
     this.#handleDataChange = onDataChange;
     this.#pointsModel = pointsModel;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
   }
 
   init = (destroyHandler) => {
@@ -26,15 +33,16 @@ export default class NewPointPresenter {
     if (this.#newPointComponent !== null) {
       return;
     }
-    this.#destinations = [...this.#pointsModel.destinations];
-    this.#offers = [...this.#pointsModel.offers];
+    this.#destinations = [...this.#destinationsModel.destinations];
+    this.#offers = [...this.#offersModel.offers];
 
     this.#newPointComponent = new AddNewPointView({
+      point: EMPTY_POINT,
       destination: this.#destinations,
       offers: this.#offers
     });
-    this.#newPointComponent.handleFormSubmit(this.#handleFormSubmit);
-    this.#newPointComponent.handleCancelButtonClick(this.#handleCancelClick);
+    this.#newPointComponent.setSubmitCallback(this.#handleFormSubmit);
+    this.#newPointComponent.setCancelCallback(this.#handleCancelClick);
 
     render(this.#newPointComponent, this.#pointListContainer, RenderPosition.AFTERBEGIN);
     document.addEventListener('keydown', this.#escKeyDownHandler);
