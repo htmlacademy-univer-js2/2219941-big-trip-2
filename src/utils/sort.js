@@ -12,4 +12,4 @@ const sortDay = (pointFirst, pointSecond) => (
   getDateDifference(pointFirst, pointSecond)
 );
 
-export  {sortDay, sortTime, sortPrice};
+export {sortDay, sortTime, sortPrice};
