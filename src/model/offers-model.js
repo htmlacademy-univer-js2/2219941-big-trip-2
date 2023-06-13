@@ -1,5 +1,4 @@
 import Observable from '../framework/observable.js';
-import {UpdateType} from '../presenter/point-presenter.js';
 
 const EMPTY_OFFER = {
   id: 0,

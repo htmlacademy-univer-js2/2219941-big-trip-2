@@ -1,7 +1,6 @@
 import AbstractStatefulView from '../framework/view/abstract-view.js';
 import {POINT_TYPES} from '../const.js';
 import {getDateTime} from '../utils/task.js';
-import {capitalizeFirstLetter} from '../utils/common.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import he from 'he';
