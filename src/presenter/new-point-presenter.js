@@ -1,8 +1,6 @@
 import {remove, render, RenderPosition} from '../framework/render.js';
 import AddNewPointView from '../view/add-new-point-view.js';
-import {nanoid} from 'nanoid';
 import {UserAction, UpdateType} from './point-presenter.js';
-import {EMPTY_POINT} from '../model/points_model.js';
 
 export default class NewPointPresenter {
   #pointListContainer = null;
@@ -10,7 +8,6 @@ export default class NewPointPresenter {
   #handleDataChange = null;
   #handleDestroy = null;
 
-  #pointsModel = null;
   #destinationsModel = null;
   #offersModel = null;
 
@@ -19,10 +16,9 @@ export default class NewPointPresenter {
 
   #newPointComponent = null;
 
-  constructor({pointListContainer, onDataChange, pointsModel, destinationsModel, offersModel}) {
+  constructor({pointListContainer, onDataChange, destinationsModel, offersModel}) {
     this.#pointListContainer = pointListContainer;
     this.#handleDataChange = onDataChange;
-    this.#pointsModel = pointsModel;
     this.#destinationsModel = destinationsModel;
     this.#offersModel = offersModel;
   }
@@ -37,7 +33,6 @@ export default class NewPointPresenter {
     this.#offers = [...this.#offersModel.offers];
 
     this.#newPointComponent = new AddNewPointView({
-      point: EMPTY_POINT,
       destination: this.#destinations,
       offers: this.#offers
     });
@@ -60,13 +55,30 @@ export default class NewPointPresenter {
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   };
 
+  setSaving = () => {
+    this.#newPointComponent.updateElement({
+      isDisabled: true,
+      isSaving: true
+    });
+  };
+
+  setAborting = () => {
+    const resetFormState = () => {
+      this.#newPointComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false
+      });
+    };
+    this.#newPointComponent.shake(resetFormState);
+  };
+
   #handleFormSubmit = (point) => {
     this.#handleDataChange(
       UserAction.ADD_POINT,
       UpdateType.MINOR,
-      {id: nanoid(), ...point}
+      point
     );
-    this.destroy();
   };
 
   #handleCancelClick = () => {

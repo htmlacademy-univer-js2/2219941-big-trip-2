@@ -18,12 +18,12 @@ const createOffers = (offers, checkedOffers) => {
 };
 
 const createPointTemplate = (point, destinations, offersList) => {
-  const {basePrice, dateFrom, dateTo, destination, isFavourite, offers, type} = point;
+  const {basePrice, dateFrom, dateTo, destination, isFavorite, offers, type} = point;
   const allTypeOffers = offersList.find((offer) => offer.type === type);
   const duration = getDuration(dateFrom, dateTo);
   const startDate = dateFrom ? fixDateFormat(dateFrom) : '';
   const endDate = dateTo ? fixDateFormat(dateTo) : '';
-  const favouriteClass = isFavourite ? 'event__favorite-btn--active' : '';
+  const favoriteClass = isFavorite ? 'event__favorite-btn--active' : '';
   const destinationInfo = destinations.find((item) => item.id === destination);
 
   return (
@@ -54,7 +54,7 @@ const createPointTemplate = (point, destinations, offersList) => {
                 <ul class="event__selected-offers">
                   ${createOffers(allTypeOffers.offers, offers)}
                 </ul>` : ''}
-                <button class="event__favorite-btn ${favouriteClass}" type="button">
+                <button class="event__favorite-btn ${favoriteClass}" type="button">
                   <span class="visually-hidden">Add to favorite</span>
                   <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
                     <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
@@ -77,16 +77,19 @@ export default class PointView extends AbstractView {
     this.#point = point;
     this.#destination = destination;
     this.#offers = offers;
+
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#rollupButtonClickHandler);
+    this.element.querySelector('.event__favorite-btn')
+      .addEventListener('click', this.#favoriteButtonClickHandler);
   }
 
   get template() {
     return createPointTemplate(this.#point, this.#destination, this.#offers);
   }
 
-  handleRollDownButtonClick = (callback) => {
+  setRollDownButtonCallback = (callback) => {
     this._callback.rollupButtonClick = callback;
-    this.element.querySelector('.event__rollup-btn')
-      .addEventListener('click', this.#rollupButtonClickHandler);
   };
 
   #rollupButtonClickHandler = (evt) => {
@@ -94,10 +97,8 @@ export default class PointView extends AbstractView {
     this._callback.rollupButtonClick();
   };
 
-  handleFavoriteButtonClick = (callback) => {
+  setFavoriteButtonCallback = (callback) => {
     this._callback.favoriteButtonClick = callback;
-    this.element.querySelector('.event__favorite-btn')
-      .addEventListener('click', this.#favoriteButtonClickHandler);
   };
 
   #favoriteButtonClickHandler = (evt) => {

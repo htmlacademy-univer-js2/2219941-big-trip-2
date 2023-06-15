@@ -11,7 +11,7 @@ import OffersModel from './model/offers-model.js';
 import OffersApiService from './api-service/offers-api-service.js';
 import {render} from './framework/render.js';
 
-const AUTHORIZATION = 'Basic gs3df67Sq2Gjjr2';
+const AUTHORIZATION = 'Basic gs3df67Sq2Gjr2';
 const END_POINT = 'https://18.ecmascript.pages.academy/big-trip';
 
 const siteMainElement = document.querySelector('.page-main');
@@ -49,18 +49,25 @@ const handleNewPointFormClose = () => {
   newPointButtonComponent.element.disabled = false;
 };
 const handleNewPointButtonClick = () => {
-  pagePresenter.createPoint(handleNewPointFormClose);
-  newPointButtonComponent.element.disabled = true;
+  try {
+    pagePresenter.createPoint(handleNewPointFormClose);
+    newPointButtonComponent.element.disabled = true;
+  } catch(err) {
+    newPointButtonComponent.element.disabled = false;
+  }
 };
 newPointButtonComponent.setClickHandler(handleNewPointButtonClick);
 
 render(new MenuView(), siteHeaderElement.querySelector('.trip-controls__navigation'));
 filterPresenter.init();
 pagePresenter.init();
-offersModel.init();
-destinationsModel.init();
-pointsModel.init()
+offersModel.init()
   .finally(() => {
-    render(newPointButtonComponent, siteHeaderElement.querySelector('.trip-main'));
+    destinationsModel.init()
+      .finally(() => {
+        pointsModel.init()
+          .finally(() => {
+            render(newPointButtonComponent, siteHeaderElement.querySelector('.trip-main'));
+          });
+      });
   });
-
