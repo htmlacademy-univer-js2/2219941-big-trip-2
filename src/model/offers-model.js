@@ -1,11 +1,5 @@
 import Observable from '../framework/observable.js';
 
-const EMPTY_OFFER = {
-  id: 0,
-  title: 'Cool offer',
-  price: 77
-};
-
 export default class OffersModel extends Observable {
   #offersApiService = null;
   #offers = [];
@@ -27,5 +21,3 @@ export default class OffersModel extends Observable {
     return this.#offers;
   }
 }
-
-export {EMPTY_OFFER};

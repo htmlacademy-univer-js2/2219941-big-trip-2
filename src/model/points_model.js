@@ -1,18 +1,5 @@
 import Observable from '../framework/observable.js';
 import {UpdateType} from '../presenter/point-presenter.js';
-import {nanoid} from 'nanoid';
-import dayjs from 'dayjs';
-
-const EMPTY_POINT = {
-  basePrice: 0,
-  dateFrom: dayjs(),
-  dateTo: dayjs('2023-12-31'),
-  destination: 1,
-  id: nanoid(),
-  isFavorite: false,
-  offers: [],
-  type: 'ship'
-};
 
 export default class PointsModel extends Observable {
   #pointsApiService = null;
@@ -60,28 +47,34 @@ export default class PointsModel extends Observable {
     }
   };
 
-  addPoint = (updateType, update) => {
-    this.#points = [
-      update,
-      ...this.#points
-    ];
-
-    this._notify(updateType, update);
+  addPoint = async (updateType, update) => {
+    try {
+      const response = await this.#pointsApiService.addPoint(update);
+      const newPoint = this.#adaptToClient(response);
+      this.#points = [newPoint, ...this.#points];
+      this._notify(updateType, newPoint);
+    } catch(err) {
+      throw new Error('Can not add point');
+    }
   };
 
-  deletePoint = (updateType, update) => {
+  deletePoint = async (updateType, update) => {
     const index = this.#points.findIndex((point) => point.id === update.id);
 
     if (index === -1) {
       throw new Error('Can not delete non-existent point');
     }
 
-    this.#points = [
-      ...this.#points.slice(0, index),
-      ...this.#points.slice(index + 1)
-    ];
-
-    this._notify(updateType);
+    try {
+      await  this.#pointsApiService.deletePoint(update);
+      this.#points = [
+        ...this.#points.slice(0, index),
+        ...this.#points.slice(index + 1)
+      ];
+      this._notify(updateType);
+    } catch(err) {
+      throw new Error('Can not delete point');
+    }
   };
 
   #adaptToClient = (point) => {
@@ -102,4 +95,3 @@ export default class PointsModel extends Observable {
   };
 }
 
-export {EMPTY_POINT};
