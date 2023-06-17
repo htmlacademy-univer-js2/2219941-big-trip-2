@@ -23,7 +23,6 @@ export default class PointsApiService extends ApiService {
         'Content-Type': 'application/json'
       })
     });
-
     return await ApiService.parseResponse(response);
   };
 
@@ -47,6 +46,10 @@ export default class PointsApiService extends ApiService {
   );
 
   #adaptToServer = (point) => {
+    if (point.basePrice === 0) {
+      throw new Error('stop');
+    }
+
     const adaptedPoint = {
       ...point,
       'base_price': point.basePrice,
